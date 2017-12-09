@@ -14,29 +14,36 @@
 %| limitations under the License.
 %\--------------------------------------------------------------------
 
-%%% @doc
-%%% The main supervisor for the application.
-%%%
--module(firefork_audio_player_sup).
--behaviour(supervisor).
--export([start_link/0]).
--export([init/1]).
+-module(firefork_audio_player).
 
+%%% ============================================================================
+%%% Callback definitions.
+%%% ============================================================================
 
-%%====================================================================
-%% API functions
-%%====================================================================
-
-%%  @doc
-%%  Create this supervisor.
 %%
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+%%  These callbacks are used for music play management.
+%%
+-callback stop(
+        Pid   :: term()
+    ) ->
+        ok.
 
-%%====================================================================
-%% Supervisor callbacks
-%%====================================================================
+-callback pause(
+        Pid   :: term()
+    ) ->
+        ok.
 
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
-init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+-callback resume(
+        Pid   :: term()
+    ) ->
+        ok.
+
+-callback next(
+        Pid   :: term()
+    ) ->
+        ok.
+
+-callback prev(
+        Pid   :: term()
+    ) ->
+        ok.
