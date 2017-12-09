@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc firefork_player public API
+%% @doc firefork_audio_player public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(firefork_player_app).
+-module(firefork_audio_player_app).
 
 -behaviour(application).
 
@@ -15,7 +15,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    firefork_player_sup:start_link().
+    firefork_audio_player_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->

@@ -1,4 +1,4 @@
-firefork_player
+firefork_audio_player
 =====
 
 An OTP application

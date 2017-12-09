@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc firefork_player top level supervisor.
+%% @doc firefork_audio_player top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(firefork_player_sup).
+-module(firefork_audio_player_sup).
 
 -behaviour(supervisor).
 
