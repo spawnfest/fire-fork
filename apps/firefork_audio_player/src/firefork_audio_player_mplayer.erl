@@ -55,25 +55,52 @@ start_link(Name) ->
 play(ProcName, Path) ->
     try gen_server:call(ProcName, {play, Path})
     catch
-        _:_ ->
-            {ok, _Pid} = firefork_audio_player_sup:start_child(ProcName),
-            gen_server:call(ProcName, {play, Path})
+        exit:{noproc, _} ->
+            case firefork_audio_player_sup:start_child(ProcName) of
+                {ok, _Pid} ->
+                    gen_server:call(ProcName, {play, Path});
+                {error, already_present} ->
+                    {ok, _Pid} = firefork_audio_player_sup:restart_child(),
+                    gen_server:call(ProcName, {play, Path})
+            end
     end.
 
 stop(Pid) ->
-    gen_server:call(Pid, stop).
+    try gen_server:call(Pid, stop)
+    catch
+        exit:{normal, _} ->
+            ok;
+        exit:{noproc, _} ->
+            {error, audio_player_not_stated}
+    end.
 
 pause(Pid) ->
-    gen_server:call(Pid, pause).
+    try gen_server:call(Pid, pause)
+    catch
+        exit:{noproc, _} ->
+            {error, audio_player_not_stated}
+    end.
 
 resume(Pid) ->
-    gen_server:call(Pid, resume).
+    try gen_server:call(Pid, resume)
+    catch
+        exit:{noproc, _} ->
+            {error, audio_player_not_stated}
+    end.
 
 next(Pid) ->
-    gen_server:call(Pid, next).
+    try gen_server:call(Pid, next)
+    catch
+        exit:{noproc, _} ->
+            {error, audio_player_not_stated}
+    end.
 
 prev(Pid) ->
-    gen_server:call(Pid, prev).
+    try gen_server:call(Pid, prev)
+    catch
+        exit:{noproc, _} ->
+            {error, audio_player_not_stated}
+    end.
 
 %%% ============================================================================
 %%% Internal state of the module.

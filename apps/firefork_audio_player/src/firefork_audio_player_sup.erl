@@ -21,7 +21,8 @@
 -behaviour(supervisor).
 -export([
     start_link/0,
-    start_child/1
+    start_child/1,
+    restart_child/0
 ]).
 -export([init/1]).
 
@@ -41,7 +42,7 @@ start_link() ->
 %%  Starts child process with its spec.
 %%
 start_child(Module) ->
-    {ok, _Pid} = supervisor:start_child(?MODULE, #{
+    supervisor:start_child(?MODULE, #{
             id       => firefork_audio_player,
             start    => {Module, start_link, [Module]},
             restart  => transient,
@@ -50,6 +51,13 @@ start_child(Module) ->
             modules  => [Module]
         }
     ).
+    % of
+    %     {error,already_present} -> supervisor:restart_child(?MODULE, firefork_audio_player);
+    %     {ok, Pid} -> {ok, Pid}
+    % end.
+
+restart_child() ->
+    supervisor:restart_child(?MODULE, firefork_audio_player).
 
 %%====================================================================
 %% Supervisor callbacks
