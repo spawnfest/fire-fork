@@ -51,7 +51,7 @@ Previous song (available only when playing a playlist):
 ```
 firefork_audio_player:prev().
 ```
-Running the app as standalone
+## Testing the application as standalone
 ```
 ERL_FLAGS="-config test/sys.config" rebar3 shell --apps firefork_audio_player
 ```
