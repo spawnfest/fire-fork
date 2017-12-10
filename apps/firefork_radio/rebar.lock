@@ -1,0 +1,18 @@
+{"1.1.0",
+[{<<"dthread">>,
+  {git,"https://github.com/tonyrog/dthread.git",
+       {ref,"d763748f1d2af31762682772e28e412906b8fef5"}},
+  1},
+ {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
+ {<<"lager">>,
+  {git,"https://github.com/erlang-lager/lager.git",
+       {ref,"4b318422cc89ac1f38a3ef615c5ee703e1951bf4"}},
+  0},
+ {<<"uart">>,
+  {git,"https://github.com/tonyrog/uart.git",
+       {ref,"7006ca59fb93ba3f934fe2d82b4f42d44f332967"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>}]}
+].
