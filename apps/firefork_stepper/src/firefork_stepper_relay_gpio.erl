@@ -69,11 +69,7 @@ fire(_Channel, Relay) ->
 %%
 init({Channel, Opts}) ->
     GpioPins = maps:get(gpio_pins, Opts, [2, 3]),
-    ok = lists:foreach(fun (GpioPin) ->
-        ok = gpio:init_direct(GpioPin),
-        ok = gpio:set_direction(GpioPin, low),
-        ok = gpio:clr(GpioPin)
-    end, GpioPins),
+    ok = do_init_gpio(GpioPins),
     State = #state{
         channel  = Channel,
         pins     = GpioPins,
@@ -159,5 +155,41 @@ code_change(_OldVsn, State, _Extra) ->
 %%% ============================================================================
 %%% Internal functions.
 %%% ============================================================================
+
+%%
+%%
+%%
+do_init_gpio(Pending) ->
+    do_init_gpio(Pending, [], 10).
+
+do_init_gpio([], Enabled, _Retries) ->
+    lager:debug("All GPIO pins initialized: ~p", [Enabled]),
+    ok;
+
+do_init_gpio(Pending, Enabled, 0) ->
+    lager:debug("Failed to initialize GPIO, enabled=~p, pending=~p", [Enabled, Pending]),
+    {error, {unable_to_initialize, Pending}};
+
+do_init_gpio(Pending, Enabled, Retries) ->
+    {NewEnabled, NewPending} = lists:partition(fun (GpioPin) ->
+        try
+            ok = gpio:init(GpioPin),
+            ok = gpio:set_direction(GpioPin, low),
+            ok = gpio:clr(GpioPin),
+            true
+        catch
+            ErrClass:ErrReason ->
+                lager:warning(
+                    "Failed to initialize GPIO pin=~p, reason=~p:~p, stacktrace=~p",
+                    [GpioPin, ErrClass, ErrReason, erlang:get_stacktrace()]
+                ),
+                false
+        end
+    end, Pending),
+    case NewPending of
+        [] -> ok;
+        _  -> timer:sleep(1000) % Retry with delays.
+    end,
+    do_init_gpio(NewPending, Enabled ++ NewEnabled, Retries - 1).
 
 
