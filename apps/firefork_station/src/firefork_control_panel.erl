@@ -23,10 +23,24 @@
 -define(menuID_RUN_RADIO_2,        403).
 -define(menuID_RUN_RADIO_3,        404).
 
+-define(btnID_TEST,    10).
+-define(btnID_START,   11).
+-define(btnID_STOP,    12).
+
+-define(fileID_SCRIPT, 21).
+-define(fileID_AUDIO,  22).
+
+
 -define(menuID_HELP_ABOUT,         ?wxID_ABOUT).
 -define(wID_LOG_TEXT_CTRL, 3000).
 
--record(state, {win, selector, log, code}).
+-record(state, {
+    win,         % master wx frame
+    log,         % event log copmponent    
+    audio_file,  % audio file with path
+    script_file, % script file with path
+    vsn
+    }).
 
 
 start() ->
@@ -96,8 +110,8 @@ try
     FilesSz = wxStaticBoxSizer:new(?wxVERTICAL, FilesPanel, [{label, "Select files"}]),
     wxPanel:setSizer(FilesPanel, FilesSz),
     
-    ScriptFilePicker = wxFilePickerCtrl:new(FilesPanel, 1, [{path, "/"}]),
-    AudioFilePicker  = wxFilePickerCtrl:new(FilesPanel, 2, [{path, "/"}]),
+    ScriptFilePicker = wxFilePickerCtrl:new(FilesPanel, 21, [{path, "/"}]),
+    AudioFilePicker  = wxFilePickerCtrl:new(FilesPanel, 22, [{path, "/"}]),
 
     wxFilePickerCtrl:connect(ScriptFilePicker, command_filepicker_changed, []),
     wxFilePickerCtrl:connect(AudioFilePicker, command_filepicker_changed, []),
@@ -114,12 +128,11 @@ try
     B10 = wxButton:new(CtrlPanel, 10, [{label,"Test"}]),
     wxButton:setToolTip(B10, "Test connectivity, and file checksums"),
 
-    B11 = wxButton:new(CtrlPanel, 11, [{label,"Launch"}]),
-    wxButton:setToolTip(B11, "Test connectivity, and file checksums"),
+    B11 = wxButton:new(CtrlPanel, 11, [{label,"Start"}]),
+    wxButton:setToolTip(B11, "Start launch script and audio"),
 
-    B12 = wxToggleButton:new(CtrlPanel, 12, "Pause/Resume"),
-    wxToggleButton:connect(B12, command_togglebutton_clicked),
-    wxButton:setToolTip(B12, "A toggle button"),
+    B12 = wxButton:new(CtrlPanel, 12, [{label,"Stop"}]),
+    wxButton:setToolTip(B12, "Send stop command to player"),
 
     wxSizer:add(CtrlSz, B10, [{proportion, 1}, {border, 4}, {flag, ?wxALL}]),    
     wxSizer:add(CtrlSz, B11, [{proportion, 1}, {border, 4}, {flag, ?wxALL}]),    
@@ -152,15 +165,16 @@ try
     wxSizer:add(EventSz, EvCtrl, [{proportion, 1}, {border, 4}, {flag, ?wxEXPAND}]),
 
     % wx events
-    wxFrame:connect(Frame, close_window),
+    ok = wxFrame:connect(Frame, close_window),
     ok = wxFrame:connect(Frame, command_menu_selected),
-
+    ok = wxWindow:connect(CtrlPanel, command_button_clicked),
 
     % set defaults
     String = "~nShort instructions: ~n"
             " - Load prepared firescript (.csv) and audio (.mp3) files.~n"
             " - Test conectivity with Ignition module~n"
-            " - Launch fireworks and run! ~n",
+            " - Launch fireworks and run! ~n~n"
+            "---------------------------------~n",
 
     logMessage(Frame, String),
 
@@ -257,9 +271,10 @@ handle_cast(Msg, State) ->
 
 %%-----------------------------------------------------------------------------
 %% Async Events are handled in handle_event as in handle_info
+%%
 handle_event(#wx{id = Id,
-         event = #wxCommand{type = command_menu_selected}},
-         State = #state{}) ->
+        event = #wxCommand{type = command_menu_selected}},
+        State = #state{}) ->
     case Id of
     ?wxID_HELP ->
         wx_misc:launchDefaultBrowser("https://github.com/spawnfest/fire-fork"),
@@ -272,7 +287,63 @@ handle_event(#wx{id = Id,
         {noreply, State1}
     end;
 
+%%
+handle_event(#wx{id=Id, 
+        event=#wxCommand{type=command_button_clicked}},
+        State = #state{win=Frame}) ->
+    case Id of
+    ?btnID_TEST ->
+        logMessage(Frame, "~nTest command executed."),
+        firefork_station_intf_stepper:send_check(scenario1, 100), % TODO provide params
+        {noreply, State};
 
+    ?btnID_START ->
+        logMessage(Frame, "~nStart command executed."),
+        firefork_station_intf_stepper:send_start(scenario1, 100, 0), % TODO provide params
+        AudioPath = State#state.audio_file,
+        % TODO audio should start after ACK received from stepper
+        case AudioPath of
+            undefined ->
+                logMessage(Frame, "~nWarrning audio file not selected!"); 
+            _ -> 
+                firefork_audio_player:play(AudioPath)
+        end, 
+        {noreply, State};
+
+    ?btnID_STOP ->
+        logMessage(Frame, "~nStop command executed."),
+        firefork_station_intf_stepper:send_stop(scenario1, 100), 
+        firefork_audio_player:stop(),
+        {noreply, State};
+
+    _ ->
+        logMessage(Frame, "Unhandled button action (wxId=~p).", [Id]),
+        {noreply, State}
+    end;
+
+% select file events
+handle_event(#wx{id = Id,
+        event = #wxFileDirPicker{
+            type = command_filepicker_changed,
+            path = Path}},
+        State = #state{win=Frame}) ->
+    case Id of
+    ?fileID_SCRIPT ->
+        logMessage(Frame, "~nLaunch script selected."),
+        State1 = State#state{script_file=Path},
+        {noreply, State1};
+
+    ?fileID_AUDIO ->
+        logMessage(Frame, "~nAudio file selected."),
+        State1 = State#state{audio_file=Path},
+        {noreply, State1};
+
+    _ ->
+        logMessage(Frame, "Unhandled action (wxId=~p).", [Id]),
+        {noreply, State}
+    end;
+
+%%
 handle_event(#wx{event=#wxClose{}}, State = #state{win=Frame}) ->
     io:format("~p Closing window ~n",[self()]),
     ok = wxFrame:setStatusText(Frame, "Closing...",[]),
@@ -281,7 +352,7 @@ handle_event(#wx{event=#wxClose{}}, State = #state{win=Frame}) ->
 
 handle_event(Ev,State = #state{win=Frame}) ->
     io:format("~p Got event ~p ~n",[?MODULE, Ev]),
-    logMessage(Frame, "~p Got unhandled event ~p ~n",[?MODULE, Ev]),
+    logMessage(Frame, "~nUnhandled GUI event: ~n  ~p ~n",[Ev]),
     {noreply, State}.
 
 code_change(_, _, State) ->

@@ -7,7 +7,9 @@
                   kernel,
                   stdlib,
                   lager,
-                  wx
+                  wx,
+                  firefork_radio,
+                  firefork_audio_player
                  ]},
   {mod, { firefork_station_app, []}},
   {env, []}

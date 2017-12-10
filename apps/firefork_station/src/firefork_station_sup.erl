@@ -16,8 +16,27 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [
-        #{id => firefork_control_panel, 
-          start => {firefork_control_panel, start_link, []}  }
+    SupFlags = #{
+        strategy  => one_for_all,
+        intensity => 600,
+        period    => 60000
+    },
+    {ok, {SupFlags, [
+        #{
+            id      => firefork_control_panel, 
+            start   => {firefork_control_panel, start_link, []},
+            restart => transient
+        },
+        % #{
+        %     id    => firefork_audio_player_sup,
+        %     start => {firefork_audio_player_sup, start_link, []},
+        %     type  => supervisor
+        % },
+        #{
+            id    => firefork_station_intf_sup,
+            start => {firefork_station_intf_sup, start_link, []},
+            type  => supervisor
+        }
+
     ]} }.
 
