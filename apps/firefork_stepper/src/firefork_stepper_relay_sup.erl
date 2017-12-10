@@ -1,7 +1,7 @@
 %%% @doc
-%%% The main supervisor for the application.
+%%% Supervisor for all the relay controllers.
 %%%
--module(firefork_stepper_sup).
+-module(firefork_stepper_relay_sup).
 -behaviour(supervisor).
 -export([start_link/0]).
 -export([init/1]).
@@ -15,6 +15,7 @@
 %%
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
 
 
 %%% ============================================================================
@@ -32,14 +33,8 @@ init([]) ->
     },
     {ok, {SupFlags, [
         #{
-            id    => firefork_stepper_relay_sup,
-            start => {firefork_stepper_relay_sup, start_link, []},
-            type  => supervisor
-        },
-        #{
-            id    => firefork_stepper_intf_sup,
-            start => {firefork_stepper_intf_sup, start_link, []},
-            type  => supervisor
+            id    => firefork_stepper_relay_gpio,
+            start => {firefork_stepper_relay_gpio, start_link, [_Channel = 0, #{}]}
         }
     ]}}.
 

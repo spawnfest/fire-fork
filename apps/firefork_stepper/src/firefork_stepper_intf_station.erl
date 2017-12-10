@@ -43,17 +43,17 @@ send(Message) ->
 %%
 %%  Initialization.
 %%
-handle_message({start, ScenarioName, ScenarioCRC, CallRef}) ->
-    % TODO: Scenario start.
+handle_message({start, _ScenarioName, _ScenarioCRC, CallRef, FromMS}) ->
+    ok = firefork_stepper_scenario:start(FromMS),
     ok = send({ack, start, CallRef, ok}),
     ok;
 
-handle_message({stop, ScenarioName, ScenarioCRC, CallRef}) ->
-    % TODO: Scenario stop.
+handle_message({stop, _ScenarioName, _ScenarioCRC, CallRef}) ->
+    ok = firefork_stepper_scenario:stop(),
     ok = send({ack, stop, CallRef, ok}),
     ok;
 
-handle_message({check, ScenarioName, ScenarioCRC, CallRef}) ->
+handle_message({check, _ScenarioName, _ScenarioCRC, CallRef}) ->
     % TODO: Scenario check.
     ok = send({ack, check, CallRef, ok}),
     ok;

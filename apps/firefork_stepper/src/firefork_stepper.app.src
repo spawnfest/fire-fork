@@ -7,7 +7,6 @@
         kernel,
         stdlib,
         lager,
-        uart,
         gpio
     ]},
     {licenses, ["Apache 2.0"]}

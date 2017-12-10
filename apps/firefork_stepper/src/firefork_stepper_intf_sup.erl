@@ -33,8 +33,8 @@ init([]) ->
     },
     {ok, {SupFlags, [
         #{
-            id    => firefork_stepper_intf_uart,
-            start => {firefork_stepper_intf_uart, start_link, []}
+            id    => firefork_stepper_intf_station,
+            start => {firefork_stepper_intf_station, start_link, []}
         }
     ]}}.
 
