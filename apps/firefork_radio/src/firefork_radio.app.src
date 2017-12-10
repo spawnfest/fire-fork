@@ -1,0 +1,12 @@
+{application, firefork_radio, [
+    {description, "FireFork: radio"},
+    {vsn, git},
+    {registered, [firefork_radio]},
+    {applications, [
+        kernel,
+        stdlib,
+        lager,
+        uart
+    ]},
+    {licenses, ["Apache 2.0"]}
+ ]}.

@@ -1,0 +1,13 @@
+{application, firefork_stepper, [
+    {description, "FireFork: stepper"},
+    {vsn, git},
+    {registered, [firefork_stepper]},
+    {mod, {firefork_stepper_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        lager,
+        gpio
+    ]},
+    {licenses, ["Apache 2.0"]}
+ ]}.
