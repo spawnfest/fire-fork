@@ -19,7 +19,10 @@
 %%%
 -module(firefork_audio_player_sup).
 -behaviour(supervisor).
--export([start_link/0]).
+-export([
+    start_link/0,
+    start_child/1
+]).
 -export([init/1]).
 
 
@@ -33,10 +36,30 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
+
+%%  @doc
+%%  Starts child process with its spec.
+%%
+start_child(Module) ->
+    {ok, _Pid} = supervisor:start_child(?MODULE, #{
+            id       => firefork_audio_player,
+            start    => {Module, start_link, [Module]},
+            restart  => transient,
+            shutdown => 5000,
+            type     => worker,
+            modules  => [Module]
+        }
+    ).
+
 %%====================================================================
 %% Supervisor callbacks
 %%====================================================================
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    SupFlags = #{
+        strategy  => one_for_one,
+        intensity => 10,
+        period    => 10000
+    },
+    {ok, {SupFlags, []}}.

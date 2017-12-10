@@ -21,29 +21,37 @@ ls *.mp3 > playlist_name.m3u
 ## Usage
 Play single mp3 file:
 ```
-{ok, Pid} = firefork_audio_player_mplayer:start_link("/path/to/file.mp3").
+ok = firefork_audio_player:play("/path/to/file.mp3").
+```
+Example:
+```
+ok = firefork_audio_player:play("~/Downloads/Santi.mp3").
 ```
 Play playlist m3u file:
 ```
-{ok, Pid} = firefork_audio_player_mplayer:start_link("/path/to/file.m3u").
+ok = firefork_audio_player:play("~/Downloads/playlist.m3u").
 ```
 Stop:
 ```
-firefork_audio_player_mplayer:stop(Pid).
+firefork_audio_player:stop().
 ```
 Pause:
 ```
-firefork_audio_player_mplayer:pause(Pid).
+firefork_audio_player:pause().
 ```
 Resume:
 ```
-firefork_audio_player_mplayer:resume(Pid).
+firefork_audio_player:resume().
 ```
 Next song (available only when playing a playlist):
 ```
-firefork_audio_player_mplayer:next(Pid).
+firefork_audio_player:next().
 ```
 Previous song (available only when playing a playlist):
 ```
-firefork_audio_player_mplayer:prev(Pid).
+firefork_audio_player:prev().
+```
+Running the app as standalone
+```
+ERL_FLAGS="-config test/sys.config" rebar3 shell --apps firefork_audio_player
 ```

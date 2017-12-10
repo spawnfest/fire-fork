@@ -15,7 +15,14 @@
 %\--------------------------------------------------------------------
 
 -module(firefork_audio_player).
-
+-export([
+    play/1,
+    stop/0,
+    pause/0,
+    resume/0,
+    next/0,
+    prev/0
+]).
 %%% ============================================================================
 %%% Callback definitions.
 %%% ============================================================================
@@ -23,6 +30,15 @@
 %%
 %%  These callbacks are used for music play management.
 %%
+%-callback start_link(Name :: atom(), Path :: string()) ->
+%        ok.
+
+-callback play(
+        Pid   :: term(),
+        Path  :: string()
+    ) ->
+        ok.
+
 -callback stop(
         Pid   :: term()
     ) ->
@@ -47,3 +63,68 @@
         Pid   :: term()
     ) ->
         ok.
+
+
+
+%%% ============================================================================
+%%% Public API.
+%%% ============================================================================
+
+%%
+%%  Returns the default store reference.
+%%
+-spec play(Path :: string()) -> ok.
+
+play(Path) ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:play(Module, Path).
+
+
+%%
+%%  Returns the default store reference.
+%%
+-spec stop() -> ok.
+
+stop() ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:stop(Module).
+
+
+%%
+%%  Returns the default store reference.
+%%
+-spec pause() -> ok.
+
+pause() ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:pause(Module).
+
+
+%%
+%%  Returns the default store reference.
+%%
+-spec resume() -> ok.
+
+resume() ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:resume(Module).
+
+
+%%
+%%  Returns the default store reference.
+%%
+-spec next() -> ok.
+
+next() ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:next(Module).
+
+
+%%
+%%  Returns the default store reference.
+%%
+-spec prev() -> ok.
+
+prev() ->
+    {ok, Module} = firefork_audio_player_app:get_env(player),
+    Module:prev(Module).

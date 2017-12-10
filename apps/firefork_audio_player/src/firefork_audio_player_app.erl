@@ -19,10 +19,36 @@
 %%%
 -module(firefork_audio_player_app).
 -behaviour(application).
+-export([get_env/1, get_env/2]).
 -export([start/2, stop/1]).
 
+-define(APP, firefork_audio_player).
+
+%%% ============================================================================
+%%% Public API.
+%%% ============================================================================
+
+%%  @doc
+%%  Get environment variable for this application.
+%%
+-spec get_env(Name :: atom()) -> undefined | {ok, Value :: term()}.
+
+get_env(Name) ->
+    application:get_env(?APP, Name).
+
+
+%%  @doc
+%%  Get environment variable for this application.
+%%
+-spec get_env(Name :: atom(), Default :: term()) -> Value :: term().
+
+get_env(Name, Default) ->
+    application:get_env(?APP, Name, Default).
+
+
+
 %%====================================================================
-%% API
+%% Application callbacks
 %%====================================================================
 
 %%  @doc

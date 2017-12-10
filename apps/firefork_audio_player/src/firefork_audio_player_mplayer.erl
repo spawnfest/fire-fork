@@ -20,11 +20,13 @@
 %%% Single mp3 files and their playlists (.m3u) are supported.
 %%%
 -module(firefork_audio_player_mplayer).
+-behaviour(firefork_audio_player).
 -behaviour(gen_server).
 
 %% API
 -export([
     start_link/1,
+    play/2,
     stop/1,
     pause/1,
     resume/1,
@@ -48,8 +50,16 @@
 %%  @doc
 %%  Manage audio player.
 %%
-start_link(FilePath) ->
-    gen_server:start_link(?MODULE, FilePath, []).
+start_link(Name) ->
+    {ok, _Pid} = gen_server:start_link({local, Name}, ?MODULE, [], []).
+
+play(ProcName, Path) ->
+    try gen_server:call(ProcName, {play, Path})
+    catch
+        _:_ ->
+            {ok, _Pid} = firefork_audio_player_sup:start_child(ProcName),
+            gen_server:call(ProcName, {play, Path})
+    end.
 
 stop(Pid) ->
     gen_server:call(Pid, stop).
@@ -71,6 +81,7 @@ prev(Pid) ->
 %%% ============================================================================
 
 -record(state, {
+    path    :: string(),
     port    :: term(),
     status  :: playing | paused,
     type    :: playlist | single
@@ -85,26 +96,34 @@ prev(Pid) ->
 %% @doc
 %% Sets up subscription configuration loop.
 %%
-init(FilePath) ->
-    case filename:extension(FilePath) of
-        ".m3u" ->
-            Port = erlang:open_port({spawn, "mplayer -playlist " ++ FilePath}, [stream, binary, use_stdio]),
-            {ok, #state{port = Port, type = playlist}};
-        ".mp3" ->
-            Port = erlang:open_port({spawn, "mplayer " ++ FilePath}, [stream, binary, use_stdio]),
-            {ok, #state{port = Port, type = single}};
-        Ext ->
-            {stop, {error, {unsupported_extention, Ext}}}
-    end.
+init(Path) ->
+    {ok, #state{path = Path}}.
 
 
 %% @doc
 %% Manage the audio play.
 %%
+handle_call({play, Path}, _From, State = #state{status = Status}) ->
+    case Status of
+        playing ->
+            {reply, {error, already_playing}, State};
+        _ ->
+            case filename:extension(Path) of
+                ".m3u" ->
+                    Port = erlang:open_port({spawn, "mplayer -playlist " ++ Path}, [stream, binary, use_stdio, exit_status]),
+                    {reply, ok, State#state{port = Port, type = playlist, status = playing}};
+                ".mp3" ->
+                    Port = erlang:open_port({spawn, "mplayer " ++ Path}, [stream, binary, use_stdio, exit_status]),
+                    {reply, ok, State#state{port = Port, type = single, status = playing}};
+                Ext ->
+                    {stop, {error, {unsupported_extention, Ext}}}
+            end
+    end;
+
 handle_call(stop, _From, State = #state{port = Port}) ->
     true = erlang:port_command(Port, "q"),
-    NewState = State#state{status = paused},
-    {reply, ok, NewState};
+    true = erlang:port_close(Port),
+    {stop, normal, State};
 
 handle_call(pause, _From, State = #state{port = Port}) ->
     true = erlang:port_command(Port, "p"),
@@ -146,6 +165,9 @@ handle_cast(_Unknown, State) ->
 %% @doc
 %% Unused.
 %%
+handle_info({Port,{exit_status,Status}}, State = #state{port = Port}) ->
+    {stop, normal, State};
+
 handle_info(_Unknown, State) ->
     {noreply, State}.
 
