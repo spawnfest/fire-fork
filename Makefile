@@ -6,7 +6,7 @@ compile:
 	$(REBAR) compile
 
 clean:
-	$(REBAR) clean
+	$(REBAR) clean --all
 
 release:
 	$(REBAR) release --relname firefork_stepper
