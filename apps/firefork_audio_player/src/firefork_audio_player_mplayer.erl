@@ -150,10 +150,16 @@ handle_call(stop, _From, State = #state{port = Port}) ->
     true = erlang:port_close(Port),
     {stop, normal, State};
 
+handle_call(pause, _From, State = #state{status = paused}) ->
+    {reply, {error, already_paused}, State};
+
 handle_call(pause, _From, State = #state{port = Port}) ->
     true = erlang:port_command(Port, "p"),
     NewState = State#state{status = paused},
     {reply, ok, NewState};
+
+handle_call(resume, _From, State = #state{status = playing}) ->
+    {reply, {error, already_resumed}, State};
 
 handle_call(resume, _From, State = #state{port = Port}) ->
     true = erlang:port_command(Port, "p"),
