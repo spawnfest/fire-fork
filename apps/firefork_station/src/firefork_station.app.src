@@ -1,0 +1,14 @@
+{application, firefork_station,
+ [
+  {description, ""},
+  {vsn, git},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  lager,
+                  wx
+                 ]},
+  {mod, { firefork_station_app, []}},
+  {env, []}
+ ]}.
