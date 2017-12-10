@@ -17,13 +17,12 @@
 %%% @doc
 %%% This module allows to play music.
 %%% It depends on OS software - mplayer.
-%%% Single mp3 files and their playlists (.m3u) are supported.
+%%% Single mp3 files and mp3 playlists (.m3u) are supported.
 %%%
 -module(firefork_audio_player_mplayer).
+-compile([{parse_transform, lager_transform}]).
 -behaviour(firefork_audio_player).
 -behaviour(gen_server).
-
-%% API
 -export([
     start_link/1,
     play/2,
@@ -81,7 +80,6 @@ prev(Pid) ->
 %%% ============================================================================
 
 -record(state, {
-    path    :: string(),
     port    :: term(),
     status  :: playing | paused,
     type    :: playlist | single
@@ -94,10 +92,10 @@ prev(Pid) ->
 %%% ============================================================================
 
 %% @doc
-%% Sets up subscription configuration loop.
+%% Initializes the process.
 %%
-init(Path) ->
-    {ok, #state{path = Path}}.
+init(_) ->
+    {ok, #state{}}.
 
 
 %% @doc
@@ -163,9 +161,10 @@ handle_cast(_Unknown, State) ->
 
 
 %% @doc
-%% Unused.
+%% Handles message when Port is closed externally.
 %%
-handle_info({Port,{exit_status,Status}}, State = #state{port = Port}) ->
+handle_info({Port, {exit_status, _Status}}, State = #state{port = Port}) ->
+    lager:info("Audio play finished."),
     {stop, normal, State};
 
 handle_info(_Unknown, State) ->
